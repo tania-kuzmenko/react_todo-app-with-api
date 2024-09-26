@@ -166,7 +166,7 @@ export const App: React.FC = () => {
     let toggledList = todos.filter(todo => !todo.completed);
 
     if (isAllCompleted) {
-      toggledList = [...todos]; // Toggle all if all are completed
+      toggledList = [...todos];
     }
 
     const shouldCompleteAll = !isAllCompleted;
