@@ -24,7 +24,7 @@ export const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const [activeTodoList, setActiveTodoIdList] = useState<number[]>([]);
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => setError(''), 3000);
@@ -163,22 +163,24 @@ export const App: React.FC = () => {
   };
 
   const handleToggleAll = async () => {
-    let toggledList = [...todos].filter(todo => !todo.completed);
+    let toggledList = todos.filter(todo => !todo.completed);
 
     if (isAllCompleted) {
-      toggledList = [...todos];
+      toggledList = [...todos]; // Toggle all if all are completed
     }
 
     const shouldCompleteAll = !isAllCompleted;
+    const activeTodoIds = toggledList.map(todo => todo.id);
 
-    Promise.allSettled(
+    setActiveTodoIdList(activeTodoIds);
+
+    await Promise.allSettled(
       toggledList.map(async todo => {
-        setActiveTodoId(todo.id);
-        const updatedtodo = {
+        const updatedTodo = {
           ...todo,
           completed: shouldCompleteAll,
         };
-        const { id, title, completed, userId } = updatedtodo;
+        const { id, title, completed, userId } = updatedTodo;
 
         try {
           const updated = await updateTodo({ id, title, completed, userId });
@@ -187,12 +189,12 @@ export const App: React.FC = () => {
             currentTodos.map(t => (t.id === updated.id ? updated : t)),
           );
         } catch {
-          showError('Unable to update a todo');
-        } finally {
-          setActiveTodoId(null);
+          showError(`Unable to update todo with ID ${todo.id}`);
         }
       }),
     );
+
+    setActiveTodoIdList([]);
   };
 
   const handleUpdateTodo = async (todo: Todo, newTitle: string) => {
@@ -272,6 +274,7 @@ export const App: React.FC = () => {
                       onChange={handleToggle}
                       onUpdate={handleUpdateTodo}
                       inputRef={inputRef}
+                      activeTodoList={activeTodoList}
                     />
                   </CSSTransition>
                 ))}
@@ -285,6 +288,7 @@ export const App: React.FC = () => {
                       onChange={handleToggle}
                       onUpdate={handleUpdateTodo}
                       inputRef={inputRef}
+                      activeTodoList={activeTodoList}
                     />
                   </CSSTransition>
                 )}
